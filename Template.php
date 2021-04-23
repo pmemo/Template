@@ -82,8 +82,10 @@ class Template
         return file_get_contents($path);
     }
 
-    public static function render($file)
+    public static function render($file, $data = null)
     {
+        if($data) self::$data = array_merge($data, self::$data);
+
         $content = self::loadTemplate($file);
         $content = self::loadNodes($content);
         $content = self::replaceTags($content);
