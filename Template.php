@@ -16,7 +16,6 @@ class Template
         '/@extend ([^\r\n].*)/' => '<?php self::$extend = $1; ?>',
         
         '/@block ([^\n][A-Za-z0-9_]+)(.+?)@endblock/s' => '<?php self::handleBlock("$1", \'$2\'); ?>',
-        '/@blocks ([A-Za-z0-9]+)/' => '<?php echo isset(self::$blocks["$1"]) ? self::$blocks["$1"] : ""; ?>',
 
         '/@foreach ([^\s].*) as ([^\r\n].*)/' => '<?php foreach($1 as $2): ?>',
         '/@endforeach/' => '<?php endforeach; ?>',
