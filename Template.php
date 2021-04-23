@@ -36,7 +36,7 @@ class Template
             if(self::$extend) {
                 self::$blocks[$name] = self::replaceTags($content);
             } else {
-                echo $content;
+                echo self::replaceTags($content);
             }
         }
     }
@@ -49,11 +49,7 @@ class Template
         }
  
         ob_start();
-        if($debug) {
-            echo $content;
-        } else {
-            eval("?>$content");
-        }
+        eval("?>$content");
         $content = ob_get_contents();
         ob_end_clean();
 
@@ -66,36 +62,37 @@ class Template
         return ($matches ? true : false);
     }
 
-    public static function loadTemplate($path) {
+    private static function loadNodes($content) {
+        while (self::nodeTemplateExists($content)) {
+            $content = preg_replace('/@include ([^\r\n].*)/', '<?php echo self::loadTemplate($1); ?>', $content);
+            ob_start();
+            eval("?>$content");
+            $content = ob_get_contents();
+            ob_end_clean();
+        }
+
+        return $content;
+    }
+
+    private static function loadTemplate($path) {
         if (!file_exists($path)) {
-            throw new Exception('Template file not exists');
+            throw new Exception('Template file not exists.');
         }
 
         return file_get_contents($path);
     }
 
-    public static function render($file, $debug = false)
+    public static function render($file)
     {
         $content = self::loadTemplate($file);
-        
-        while (self::nodeTemplateExists($content)) {
-            $content = preg_replace('/@include ([^\r\n]*)/', '<?php echo self::loadTemplate(self::replaceTags("$1")); ?>', $content);
-            ob_start();
-            if($debug) {
-                echo $content;
-            } else {
-                eval("?>$content");
-            }
-            $content = ob_get_contents();
-            ob_end_clean();
-        }
-
+        $content = self::loadNodes($content);
         $content = self::replaceTags($content);
 
         if(self::$extend) {
             unset($content);
             $layout = self::loadTemplate(self::$extend);
             self::$extend = null;
+            $layout = self::loadNodes($layout);
             $layout = self::replaceTags($layout);
             echo $layout;
         } else {
